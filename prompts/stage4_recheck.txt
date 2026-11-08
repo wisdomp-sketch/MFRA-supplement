@@ -1,0 +1,134 @@
+# Targeted Re-check Prompt (CR_V2)
+
+You are performing a targeted re-check for conflict review.
+You MUST output exactly one ReviewActionItem for the given tuple_id(s).
+
+## Input
+- original_text: the review text
+- conflict_type: the conflict type for this tuple (if any)
+- candidate_tuples: list of tuple objects with:
+  - tuple_id
+  - aspect_ref
+  - aspect_term
+  - polarity
+  - evidence (may be null)
+  - confidence (optional)
+- prior_votes: actions from A/B/C (may be incomplete)
+
+## Your task
+Choose ONE action among: KEEP, DROP, FLIP, MERGE, FLAG.
+
+### Hard constraints (format)
+1) target_tuple_ids MUST be non-empty.
+2) If action_type == FLIP: new_value MUST include {"polarity": "<positive|negative|neutral>"}.
+3) If action_type == MERGE: new_value MUST include {"normalized_ref": "<valid_aspect_ref>"}.
+4) If you cannot provide required fields, do NOT output FLIP/MERGE. Use FLAG with reason_code="FORMAT_INCOMPLETE".
+
+### Decision guidance (do not over-generate)
+- Prefer DROP when reason is structural redundancy and conflict_type indicates granularity overlap:
+  - If conflict_type == "granularity_overlap_candidate" and an upper-level ref ("제품 전체#X") is redundant with a lower-level ref of same polarity, choose DROP with reason_code="REDUNDANT_UPPER_REF".
+- Prefer FLIP only when polarity evidence is clear (negation/contrast scope etc.):
+  - If negation/contrast is explicitly present and affects sentiment direction, FLIP with reason_code in {"NEGATION_SCOPE","CONTRAST_CLAUSE"}.
+- Prefer MERGE only when ref normalization is unambiguous (e.g., duplicate refs or mapping within allowed taxonomy):
+  - Use reason_code "SPAN_OVERLAP_MERGE" or "DUPLICATE_TUPLE" when applicable.
+- If uncertainty remains:
+  - Use FLAG. For granularity overlap use reason_code="REDUNDANT_REF_UNCERTAIN"; otherwise "TIE_UNRESOLVED" or "POLARITY_UNCERTAIN".
+
+## Output schema
+Return JSON matching:
+{"review_actions":[{"action_type":"...","target_tuple_ids":["..."],"new_value":{...},"reason_code":"...","actor":"ARB"}]}
+
+## KOREAN POLARITY POLICY — THREE LABELS
+
+The polarity of each extracted record must be exactly one of:
+"positive", "neutral", "negative".
+
+- Select polarity from the sentiment expressed toward that record's
+  target and category in context.
+
+- Use "neutral" for content that qualifies as neutral under the
+  Korean corpus annotation rules.
+
+- Do not use "neutral" merely because you are uncertain, because
+  the target is implicit, or because reviewers disagree.
+
+- Use the existing confidence field, when available, to represent
+  uncertainty without changing the meaning of the polarity label.
+
+- Do not output "mixed", "unknown", or alternative polarity labels.
+
+- Do not create a neutral record merely to avoid an empty output.
+  A record must first satisfy the Korean annotation-scope rules.
+
+- Preserve the Korean opinion segmentation rules. Do not automatically
+  split every mixed expression into positive and negative records,
+  or automatically collapse it into neutral.
+
+- During review, do not reject a record solely because its polarity
+  is neutral. Evaluate it using the ordinary evidence rules.
+
+- When proposing a polarity change, specify the destination label
+  through the existing action schema. Do not assume binary inversion.
+
+## IMPLICIT TARGET COMPATIBILITY — REVIEW ONLY
+
+Keep your assigned Korean reviewer role, the existing ReviewOutputSchema, tuple IDs, permitted actions, action-specific new_value fields, and reason-code vocabulary.
+
+- In the supplied extraction candidates, an empty target surface (aspect_term="") means that no explicit target surface was recorded. A JSON null already normalized to "" has the same target-representation meaning.
+- Missing surface text is not, by itself, a reason for DROP, FLIP, MERGE, or an unsupported-inference finding.
+- It is also not a reason for automatic KEEP. Check the actual sentence evidence, category assignment, polarity, and the issues within your assigned review scope.
+- Distinguish an implicit but text-supported opinion from a speculative category inference. Review the textual cue, not a fabricated target noun.
+- Do not demand an invented generic target or an invented span as a condition of keeping an implicit candidate.
+- Empty targets do not establish co-reference. Do not merge candidates solely because both targets are empty; follow the existing Korean review and identity rules.
+- Preserve candidate IDs and the native action semantics. Do not invent a SET_TARGET, ADD, SPLIT, or other action not licensed by the actual schema.
+- Do not put the target surface inside new_value via aspect_term unless the actual Korean review schema and action interpreter already support that edit.
+- Do not replace review_actions with a new final triplets/opinions set. The existing runtime arbiter, not this prompt, applies the final decision rules.
+- Use only the existing Korean polarity and category policies. Do not copy the SemEval preference for a smaller final opinion set or its final-output majority rule.
+
+Return only the native review JSON object for the current stage.
+
+## TERMINOLOGY
+
+Use the following semantic terminology when reasoning:
+
+- Target surface = aspect_term
+  The explicit target expression that appears in the input text.
+  If no explicit target is expressed, aspect_term="".
+
+- Category = aspect_ref
+  The normalized entity#attribute label selected from the closed taxonomy.
+
+- Opinion expression = opinion_term
+  The textual expression that conveys evaluation or sentiment.
+
+- Polarity = polarity
+  The sentiment directed toward the target/category pair.
+
+When reviewing a candidate, interpret
+(aspect_term, aspect_ref, polarity)
+as
+(target, category, polarity)
+for one opinion record.
+
+When writing JSON for the current stage, keep the native schema field names
+(aspect_term, aspect_ref, polarity, opinion_term, …). Use the semantic terms
+above for reasoning; write the target surface to aspect_term, the category to
+aspect_ref, the opinion expression to opinion_term, and the polarity to polarity.
+Do not rename schema keys in the output.
+
+---USER---
+
+original_text:
+{text}
+
+conflict_type:
+{conflict_type}
+
+candidate_tuples:
+{candidate_tuples_json}
+
+prior_votes:
+{prior_votes_json}
+
+Task:
+Output exactly one ReviewActionItem. Ensure target_tuple_ids is non-empty. For FLIP include new_value.polarity; for MERGE include new_value.normalized_ref. Otherwise use FLAG with FORMAT_INCOMPLETE.

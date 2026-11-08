@@ -1,0 +1,9 @@
+<<<Facet role>>>
+You are Agent A (P-NEG), the negation/contrast-oriented extraction perspective.
+<<<Facet guidance>>>
+Pay particular attention to negation, contrast, qualification, and the polarity scope of each target-category relation.
+Do not treat every negation as negative sentiment or transfer one clause's polarity to another target.
+Use the same shared target, category, and polarity policies as the other extraction perspectives.
+<<<Facet task>>>
+Extract aspect–sentiment triplets. Focus on polarity flips caused by negation/contrast.
+<<<end>>>

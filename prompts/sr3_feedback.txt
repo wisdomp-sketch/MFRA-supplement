@@ -1,0 +1,179 @@
+## Target
+
+target = `aspect_term`
+
+- If the evaluated target is explicitly mentioned,
+  copy its exact surface form from the input.
+- If no explicit target expression exists, use "".
+- Do not invent, normalize, or reconstruct a target.
+
+## Category
+
+## CATEGORY ANNOTATION POLICY
+
+`aspect_ref`는 데이터셋의 카테고리 주석기준에 따라
+21개 허용 `개체#속성` 중 하나로 선택한다.
+
+아래 세부 기준이 적용되는 경우에는 일반적인 단어 의미보다
+해당 주석기준을 우선한다.
+세부 기준이 적용되지 않을 때만 일반 ENTITY / ATTRIBUTE 정의를 따른다.
+
+1. 화장품·세정제·세척제 등의 향·색상·제형·용량에 대한 단순 평가는
+   `본품#일반`로 주석한다.
+   발색·발림성·성분·내용물의 사용감 평가는 `본품#품질`로 주석한다.
+
+2. 패키지·용기의 외형 자체에 대한 평가는
+   `패키지·구성품#일반`로 주석한다.
+
+3. 특정 기능을 평가하는 것이 아니라,
+   제품이 특정 용도에 적절하다는 평가는 `제품 전체#일반`로 주석한다.
+
+4. 특정 장치·부속품의 특성에서 비롯된 편의성은
+   `본품#편의성`로 주석한다.
+   패키지·용기·디자인에서 비롯된 휴대성·편의성은
+   `패키지·구성품#편의성`로 주석한다.
+
+5. `본품`에는 물리적 장치·부품뿐 아니라
+   제품 내부의 기능·기능모듈도 포함한다.
+
+6. 소음에 대한 평가는 `품질` 속성으로 주석한다.
+
+세부 기준이 적용되면 그 기준을 우선하고,
+적용되지 않으면 일반 ENTITY / ATTRIBUTE 정의를 사용한다.
+
+최종 `aspect_ref`는 반드시 허용된 21개 label 중 하나여야 한다.
+
+A category has the form ENTITY#ATTRIBUTE and must follow
+the dataset annotation definitions below.
+
+ENTITY:
+- 제품 전체: 전체/총평/전반/전반적인 제품
+- 본품: 특정 장치/부품/본체/내용물(본품 하위 구성요소)
+- 패키지·구성품: 패키지/구성품(브러쉬, 펌프 등)
+- 브랜드: 브랜드 이미지/유명도/인지도/기업
+
+ATTRIBUTE:
+- 일반: 일반적 평가·총평
+- 가격: 가격·가성비
+- 디자인: 디자인·외형·스타일
+- 품질: 품질·성능·효과
+- 편의성: 편의성·사용성
+- 다양성: 다양성·라인업
+- 인지도: 인지도·유명도
+
+Allowed categories:
+제품 전체#일반
+제품 전체#가격
+제품 전체#디자인
+제품 전체#품질
+제품 전체#편의성
+제품 전체#인지도
+
+본품#일반
+본품#디자인
+본품#품질
+본품#편의성
+본품#다양성
+
+패키지·구성품#일반
+패키지·구성품#디자인
+패키지·구성품#품질
+패키지·구성품#편의성
+패키지·구성품#다양성
+
+브랜드#일반
+브랜드#가격
+브랜드#디자인
+브랜드#품질
+브랜드#인지도
+
+Choose a category only when BOTH its ENTITY and ATTRIBUTE
+are supported by the same opinion in the sentence.
+
+Choose the category whose definition is directly supported
+by the opinion in context.
+
+One distinct opinion should normally produce one category.
+Do not emit multiple category hypotheses for the same opinion
+unless the text independently supports multiple distinct evaluations.
+
+Every emitted record must contain exactly one valid category.
+
+Use `제품 전체#일반` only for an actual overall evaluation
+of the product as a whole, never as a fallback for uncertainty.
+
+If no category is sufficiently supported,
+do not emit that record rather than leaving `aspect_ref` empty
+or guessing a category.
+
+## Polarity
+
+polarity must be one of:
+`positive`, `neutral`, `negative`.
+
+Use `neutral` for genuinely neutral or balanced sentiment,
+not for uncertainty.
+
+The target, category, and polarity in each record
+must describe the same opinion.
+
+Do not invent unsupported opinions, targets, or categories.
+
+Return only JSON conforming to the provided schema.
+
+## BASELINE ALIGNMENT — S0 / S0-BUDGET / SR-3
+
+Use the same (target, category, polarity) semantic record contract as S0.
+Do NOT run an exhaustive closed-taxonomy coverage scan (that strategy is P-IMP only).
+Identify or repair only supported opinion records grounded in the sentence.
+Keep JSON schema field names (aspect_term, aspect_ref, polarity, opinion_term).
+
+You are a diagnostic critic for aspect-based sentiment tuples. You do NOT perform extraction or revision.
+
+Interpret each Stage1 triplet as one coherent opinion record
+(target, category, polarity) ↔ (aspect_term, aspect_ref, polarity).
+Flag defects when those three fields do not describe the same evaluation in context,
+or when they violate the shared Korean target / category / polarity contracts.
+Do not invent new tuples. Do not exhaustively scan the taxonomy for missing categories;
+use missing_candidate_suspicion only when the sentence clearly supports an omitted grounded opinion.
+
+Hard rules:
+- Do NOT create new tuples or new tuple_ids.
+- Only reference tuple_id values that appear in stage1_json.
+- Output ONLY a JSON object matching IssueReportSchema. No extra text.
+- Each issue must use exactly one of these five axes (axis field):
+  - schema_violation
+  - unsupported_assignment
+  - polarity_inconsistency
+  - implicit_assignment_risk
+  - missing_candidate_suspicion
+- Do NOT invent evidence strings or new character spans; brief notes must refer to existing fields only (no fabricated start/end indices).
+
+## IMPLICIT TARGET COMPATIBILITY — SELF-REFINEMENT
+
+Keep the existing Korean SR-3 call sequence and the response schema for this particular step. This block does not add another call or change a feedback step into an extraction step.
+
+- Read an empty target surface (aspect_term="") as an absent explicit target surface, not as an absent opinion.
+- Do not remove a grounded opinion solely because its target is implicit.
+- Do not preserve a candidate solely because its target is implicit; review its actual evidence and category/polarity under the same Korean rules as other candidates.
+- Do not fill an implicit target with a generic product noun or a category name.
+- When this step is permitted to output revised extraction records, use "" for an implicit target and preserve the actual surface string for an explicit target.
+- An incorrect nonempty surface prediction is not automatically an implicit target. Decide from the input and the shared contract; do not apply a blanket non-substring-to-empty conversion.
+- A feedback-only step must return its native feedback object; do not force it to return triplets.
+- Preserve the existing policy for additions, deletions, polarity changes, category changes, confidence, and uncertainty. Do not silently add new edit privileges.
+
+Return only the response object required by the existing schema for this SR-3 step.
+
+---USER---
+
+Text:
+"""
+{text}
+"""
+
+Stage1 JSON (PerspectiveASTEStage1Schema with tuple_id on each triplet):
+{stage1_json}
+
+Task:
+Return IssueReportSchema: {{ "issues": [ {{ "tuple_id", "axis", "brief" }} ] }}.
+If no problems, return {{ "issues": [] }}.

@@ -1,0 +1,10 @@
+<<<Facet role>>>
+You are Agent B (P-IMP), the implicit/category-oriented extraction perspective.
+<<<Facet guidance>>>
+Use the closed Korean taxonomy as a coverage guide and identify supported opinions,
+with particular attention to implicit targets or categories.
+If the target is implicit, use the shared empty-target representation rather than inventing a surface target.
+Infer a category only when it is supported by the input; do not emit speculative records merely because a later review stage exists.
+<<<Facet task>>>
+Extract aspect–sentiment triplets. Focus on implicit/unstated aspects that are strongly implied.
+<<<end>>>

@@ -1,0 +1,18 @@
+reason_code	origin	stage4_class	stage4_effect	named_in_prompts	mean_uses_per_run_2794
+NEGATION_SCOPE	cr_v1 standard	structural	Rule 2 (1 FLIP + 1 DROP + 1 KEEP): FLIP adopted if the FLIP vote carries this code	stage4-recheck	0.0
+CONTRAST_CLAUSE	cr_v1 standard	structural	Rule 2 (1 FLIP + 1 DROP + 1 KEEP): FLIP adopted if the FLIP vote carries this code	A-NEG stage4-recheck	33.0
+IMPLICIT_ASPECT	cr_v1 standard	none	no effect on arbitration branches (vote counted by action type only)		0.0
+ASPECT_REF_MISMATCH	cr_v1 standard	none	no effect on arbitration branches (vote counted by action type only)	A-IMP	357.6
+SPAN_OVERLAP_MERGE	cr_v1 standard	none	no effect on arbitration branches (vote counted by action type only)	stage4-recheck	0.0
+DUPLICATE_TUPLE	cr_v1 standard	none	no effect on arbitration branches (vote counted by action type only)	stage4-recheck	0.0
+WEAK_EVIDENCE	cr_v1 standard	removal_justification	Rule 2: DROP adopted if the DROP vote carries this code	A-LIT	449.4
+POLARITY_UNCERTAIN	cr_v1 standard	arbiter_flag	Rule 3 other no majority -> FLAG (reviewers may also use it)	stage4-recheck	20.4
+FORMAT_INCOMPLETE	cr_v1 standard	format	label for a FLIP/MERGE missing required fields; no branch effect (the incomplete FLIP/MERGE vote itself, not this code, triggers the stage-4 recheck)	A-IMP A-LIT A-NEG stage4-recheck	213.8
+KEEP_BEST_SUPPORTED	cr_v1 standard	none	no effect on arbitration branches (vote counted by action type only)		0.0
+WEAK_INFERENCE	extension (validation consistency)	none	no effect on arbitration branches (vote counted by action type only)	A-IMP	224.2
+EXPLICIT_NOT_REQUIRED	extension (validation consistency)	none	no effect on arbitration branches (vote counted by action type only)	A-LIT	1097.0
+STRUCTURAL_INCONSISTENT	extension (validation consistency)	structural	Rule 2 (1 FLIP + 1 DROP + 1 KEEP): FLIP adopted if the FLIP vote carries this code		0.0
+REDUNDANT_UPPER_REF	cr_v2 granularity / arbitration logging	removal_justification	Rule 2: DROP adopted if the DROP vote carries this code; stage-4 recheck DROP reason	stage4-recheck	53.6
+REDUNDANT_REF_UNCERTAIN	cr_v2 granularity / arbitration logging	arbiter_flag	Rule 2/3 unresolved granularity conflict -> FLAG	stage4-recheck	35.6
+FACET_MINORITY_SIGNAL	cr_v2 granularity / arbitration logging	arbiter_flag	Rule 1′: A-LIT minority hold on a granularity conflict -> FLAG		293.2
+TIE_UNRESOLVED	cr_v2 granularity / arbitration logging	arbiter_flag	Rule 2 unresolved -> FLAG	stage4-recheck	4.4
